@@ -7,20 +7,15 @@ import { motion } from "framer-motion";
 import OnboardingLayout from "../_components/OnboardingLayout";
 import { useOnboarding, PaymentMethodType } from "@/context/OnboardingContext";
 
-export default function PaymentSetupPage() {
-  const router = useRouter();
-  const { state, updateState } = useOnboarding();
-  const [isLoading, setIsLoading] = useState(false);
+const methods = [
+  { id: "credit_card", title: "Credit Card", desc: "Earn rewards and utilize interest-free limits.", icon: CreditCard, badges: ["Instant", "Rewards"] },
+  { id: "debit_card", title: "Debit Card", desc: "Directly debit from your linked bank account.", icon: CreditCard, badges: ["Instant"] },
+  { id: "bank_account", title: "Bank Account", desc: "Bank transfers for large volumes.", icon: Landmark, badges: ["No Limit"] },
+  { id: "upi", title: "UPI", desc: "Quick transfers using your UPI ID.", icon: Smartphone, badges: ["Instant", "Zero Fee"] },
+];
 
-  const handleContinue = () => {
-    setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      router.push("/get-started/success");
-    }, 1000);
-  };
-
-  const RightPanel = () => (
+function PaymentSetupRightPanel() {
+  return (
     <div className="flex flex-col">
       <div className="w-16 h-16 rounded-2xl bg-white border border-neutral-200 text-primary flex items-center justify-center mb-8 shadow-sm">
         <Lock className="w-8 h-8" />
@@ -42,16 +37,23 @@ export default function PaymentSetupPage() {
       </div>
     </div>
   );
+}
 
-  const methods = [
-    { id: "credit_card", title: "Credit Card", desc: "Earn rewards and utilize interest-free limits.", icon: CreditCard, badges: ["Instant", "Rewards"] },
-    { id: "debit_card", title: "Debit Card", desc: "Directly debit from your linked bank account.", icon: CreditCard, badges: ["Instant"] },
-    { id: "bank_account", title: "Bank Account", desc: "Bank transfers for large volumes.", icon: Landmark, badges: ["No Limit"] },
-    { id: "upi", title: "UPI", desc: "Quick transfers using your UPI ID.", icon: Smartphone, badges: ["Instant", "Zero Fee"] },
-  ];
+export default function PaymentSetupPage() {
+  const router = useRouter();
+  const { state, updateState } = useOnboarding();
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleContinue = () => {
+    setIsLoading(true);
+    setTimeout(() => {
+      setIsLoading(false);
+      router.push("/get-started/success");
+    }, 1000);
+  };
 
   return (
-    <OnboardingLayout currentStep={5} rightPanel={<RightPanel />}>
+    <OnboardingLayout currentStep={5} rightPanel={<PaymentSetupRightPanel />}>
       <div className="mb-8">
         <h1 className="text-3xl font-extrabold text-neutral-900 mb-2">Add Payment Method</h1>
         <p className="text-neutral-500 text-sm">Securely configure your preferred payment method.</p>

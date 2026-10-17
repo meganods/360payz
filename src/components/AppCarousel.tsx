@@ -14,14 +14,15 @@ import {
   Battery, 
   Wifi, 
   Signal, 
-  ArrowUpRight 
+  ArrowUpRight,
+  type LucideIcon 
 } from "lucide-react";
 
 interface Screen {
   id: number;
   title: string;
   desc: string;
-  icon: any;
+  icon: LucideIcon;
   color: string;
 }
 

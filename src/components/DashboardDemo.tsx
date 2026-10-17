@@ -102,6 +102,21 @@ export default function DashboardDemo() {
       await new Promise((resolve) => setTimeout(resolve, 900));
     }
 
+    // Log to backend
+    try {
+      await fetch("/api/transactions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          vendorId: selectedVendor.id,
+          vendorName: selectedVendor.name,
+          amount: amt,
+        }),
+      });
+    } catch (e) {
+      console.warn("Transaction demo offline fallback:", e);
+    }
+
     // Done
     setTransactions(prev => [
       {

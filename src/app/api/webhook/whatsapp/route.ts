@@ -33,17 +33,21 @@ export async function POST(request: Request) {
         body.entry[0].changes[0].value.messages &&
         body.entry[0].changes[0].value.messages[0]
       ) {
-        const phone_number_id = body.entry[0].changes[0].value.metadata.phone_number_id;
-        const from = body.entry[0].changes[0].value.messages[0].from; // sender's phone number
-        const msg_body = body.entry[0].changes[0].value.messages[0].text.body;
+        const messageData = body.entry[0].changes[0].value.messages[0];
+        const from = messageData.from; // sender's phone number
 
-        console.log(`Received message from ${from}: ${msg_body}`);
+        if (messageData.type === 'text' && messageData.text?.body) {
+          const msg_body = messageData.text.body;
+          console.log(`Received message from ${from}: ${msg_body}`);
 
-        // Generate response using Gemini AI
-        const aiResponse = await generateAIResponse(msg_body);
+          // Generate response using Gemini AI
+          const aiResponse = await generateAIResponse(msg_body);
 
-        // Send reply via WhatsApp
-        await sendWhatsAppMessage(from, aiResponse);
+          // Send reply via WhatsApp
+          await sendWhatsAppMessage(from, aiResponse);
+        } else {
+          console.log(`Received non-text event from ${from} (type: ${messageData.type})`);
+        }
       }
       return new NextResponse('EVENT_RECEIVED', { status: 200 });
     } else {

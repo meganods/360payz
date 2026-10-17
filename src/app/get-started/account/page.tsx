@@ -3,63 +3,13 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Eye, EyeOff, Check, ShieldCheck, Zap, LineChart, Headset, Loader2 } from "lucide-react";
+import { Eye, EyeOff, Check, ShieldCheck, Zap, LineChart, Headset, Loader2, AlertCircle } from "lucide-react";
 import OnboardingLayout from "../_components/OnboardingLayout";
 import { useOnboarding } from "@/context/OnboardingContext";
+import { useAuth } from "@/context/AuthContext";
 
-export default function AccountPage() {
-  const router = useRouter();
-  const { state, updateState } = useOnboarding();
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [termsAccepted, setTermsAccepted] = useState(false);
-  const [privacyAccepted, setPrivacyAccepted] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-
-  const isFormValid = 
-    state.firstName.trim() !== "" &&
-    state.firstName.trim() !== "" &&
-    state.lastName.trim() !== "" &&
-    state.phone.trim() !== "" &&
-    password !== "" &&
-    confirmPassword !== "" &&
-    password === confirmPassword &&
-    termsAccepted &&
-    privacyAccepted;
-
-  const calculateStrength = (pass: string) => {
-    let strength = 0;
-    if (pass.length > 7) strength += 25;
-    if (pass.match(/[A-Z]/)) strength += 25;
-    if (pass.match(/[0-9]/)) strength += 25;
-    if (pass.match(/[^A-Za-z0-9]/)) strength += 25;
-    return strength;
-  };
-
-  const strength = calculateStrength(password);
-  const strengthColor = 
-    strength === 0 ? "bg-neutral-200" :
-    strength <= 25 ? "bg-red-500" :
-    strength <= 50 ? "bg-orange-500" :
-    strength <= 75 ? "bg-yellow-500" : "bg-emerald-500";
-
-  const handleContinue = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (password !== confirmPassword) {
-      alert("Passwords do not match");
-      return;
-    }
-    setIsLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
-      router.push("/get-started/verification");
-    }, 1000);
-  };
-
-  const RightPanel = () => (
+function AccountRightPanel() {
+  return (
     <div className="flex flex-col">
       <div className="w-16 h-16 rounded-2xl bg-white border border-neutral-200 text-primary flex items-center justify-center mb-8 shadow-sm">
         <ShieldCheck className="w-8 h-8" />
@@ -109,13 +59,82 @@ export default function AccountPage() {
       </ul>
     </div>
   );
+}
+
+export default function AccountPage() {
+  const router = useRouter();
+  const { signUp } = useAuth();
+  const { state, updateState } = useOnboarding();
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [privacyAccepted, setPrivacyAccepted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const isFormValid = 
+    state.firstName.trim() !== "" &&
+    state.lastName.trim() !== "" &&
+    state.email.trim() !== "" &&
+    state.phone.trim() !== "" &&
+    password !== "" &&
+    confirmPassword !== "" &&
+    password === confirmPassword &&
+    termsAccepted &&
+    privacyAccepted;
+
+  const calculateStrength = (pass: string) => {
+    let strength = 0;
+    if (pass.length > 7) strength += 25;
+    if (pass.match(/[A-Z]/)) strength += 25;
+    if (pass.match(/[0-9]/)) strength += 25;
+    if (pass.match(/[^A-Za-z0-9]/)) strength += 25;
+    return strength;
+  };
+
+  const strength = calculateStrength(password);
+  const strengthColor = 
+    strength === 0 ? "bg-neutral-200" :
+    strength <= 25 ? "bg-red-500" :
+    strength <= 50 ? "bg-orange-500" :
+    strength <= 75 ? "bg-yellow-500" : "bg-emerald-500";
+
+  const handleContinue = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    const displayName = `${state.firstName.trim()} ${state.lastName.trim()}`.trim();
+    const res = await signUp(state.email, password, displayName);
+    setIsLoading(false);
+
+    if (!res.success) {
+      setError(res.error || "Failed to create account.");
+    } else {
+      router.push("/get-started/verification");
+    }
+  };
 
   return (
-    <OnboardingLayout currentStep={1} rightPanel={<RightPanel />} hideBack>
+    <OnboardingLayout currentStep={1} rightPanel={<AccountRightPanel />} hideBack>
       <div className="mb-8">
         <h1 className="text-3xl font-extrabold text-neutral-900 mb-2">Create Your Account</h1>
         <p className="text-neutral-500 text-sm">Get started with 360payZ in less than 2 minutes.</p>
       </div>
+
+      {error && (
+        <div className="mb-6 p-4 rounded-2xl bg-red-50 border border-red-200/80 flex items-start gap-3 text-red-700 text-xs leading-relaxed animate-in fade-in duration-300">
+          <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+          <p className="font-medium">{error}</p>
+        </div>
+      )}
 
       <form onSubmit={handleContinue} className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
@@ -264,6 +283,15 @@ export default function AccountPage() {
         >
           {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Continue"}
         </button>
+
+        <div className="pt-4 text-center">
+          <p className="text-xs text-neutral-500">
+            Already have an account?{" "}
+            <Link href="/login" className="font-bold text-primary hover:underline">
+              Sign In
+            </Link>
+          </p>
+        </div>
       </form>
     </OnboardingLayout>
   );

@@ -6,6 +6,38 @@ import { CheckCircle2, ShieldCheck, Mail, Smartphone, Loader2, ArrowRight, Lock 
 import OnboardingLayout from "../_components/OnboardingLayout";
 import { useOnboarding } from "@/context/OnboardingContext";
 
+function VerificationRightPanel({ mobileVerified }: { mobileVerified: boolean }) {
+  return (
+    <div className="flex flex-col">
+      <div className="w-16 h-16 rounded-2xl bg-white border border-neutral-200 text-primary flex items-center justify-center mb-8 shadow-sm">
+        <Lock className="w-8 h-8" />
+      </div>
+      <h3 className="text-3xl font-extrabold text-neutral-900 mb-4">Security & Verification</h3>
+      <p className="text-neutral-500 mb-10 leading-relaxed text-base">
+        We require two-factor authentication to ensure your business account is protected from unauthorized access.
+      </p>
+      
+      <div className="bg-white rounded-2xl p-6 border border-neutral-200 shadow-sm space-y-4">
+        <div className="flex items-center justify-between border-b border-neutral-100 pb-4">
+          <div className="flex items-center gap-3">
+            <Smartphone className="w-5 h-5 text-neutral-400" />
+            <span className="text-sm font-semibold text-neutral-900">WhatsApp Verification</span>
+          </div>
+          {mobileVerified ? (
+            <span className="bg-emerald-100 text-emerald-700 text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1">
+              <CheckCircle2 className="w-3 h-3" /> VERIFIED
+            </span>
+          ) : (
+            <span className="bg-neutral-100 text-neutral-500 text-[10px] font-bold px-2 py-1 rounded-full">
+              PENDING
+            </span>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function VerificationPage() {
   const router = useRouter();
   const { state, updateState } = useOnboarding();
@@ -54,39 +86,8 @@ export default function VerificationPage() {
     }
   };
 
-  const RightPanel = () => (
-    <div className="flex flex-col">
-      <div className="w-16 h-16 rounded-2xl bg-white border border-neutral-200 text-primary flex items-center justify-center mb-8 shadow-sm">
-        <Lock className="w-8 h-8" />
-      </div>
-      <h3 className="text-3xl font-extrabold text-neutral-900 mb-4">Security & Verification</h3>
-      <p className="text-neutral-500 mb-10 leading-relaxed text-base">
-        We require two-factor authentication to ensure your business account is protected from unauthorized access.
-      </p>
-      
-      <div className="bg-white rounded-2xl p-6 border border-neutral-200 shadow-sm space-y-4">
-        <div className="flex items-center justify-between border-b border-neutral-100 pb-4">
-          <div className="flex items-center gap-3">
-            <Smartphone className="w-5 h-5 text-neutral-400" />
-            <span className="text-sm font-semibold text-neutral-900">WhatsApp Verification</span>
-          </div>
-          {state.mobileVerified ? (
-            <span className="bg-emerald-100 text-emerald-700 text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1">
-              <CheckCircle2 className="w-3 h-3" /> VERIFIED
-            </span>
-          ) : (
-            <span className="bg-neutral-100 text-neutral-500 text-[10px] font-bold px-2 py-1 rounded-full">
-              PENDING
-            </span>
-          )}
-        </div>
-        
-      </div>
-    </div>
-  );
-
   return (
-    <OnboardingLayout currentStep={2} rightPanel={<RightPanel />}>
+    <OnboardingLayout currentStep={2} rightPanel={<VerificationRightPanel mobileVerified={state.mobileVerified} />}>
       <div className="mb-8">
         <h1 className="text-3xl font-extrabold text-neutral-900 mb-2">Verify Your Identity</h1>
         <p className="text-neutral-500 text-sm">Secure your account with quick verification.</p>
@@ -136,7 +137,7 @@ export default function VerificationPage() {
 
           {!state.mobileVerified && (
             <div className="mt-3 text-xs text-neutral-500 flex justify-between">
-              <span>Didn't receive code?</span>
+              <span>Didn&apos;t receive code?</span>
               {mobileTimer > 0 ? (
                 <span className="font-semibold">Resend in 00:{mobileTimer.toString().padStart(2, "0")}</span>
               ) : (

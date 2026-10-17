@@ -27,6 +27,18 @@ const BOT_RESPONSES: Record<string, string> = {
   "I need to speak with a customer care representative.": "Connecting you to a Live Agent... A support specialist will chat with you shortly. You can also reach us via phone at 1800-360-PAYZ.",
 };
 
+let msgIdCounter = 0;
+function createChatMessage(sender: "user" | "bot", text: string): ChatMessage {
+  msgIdCounter += 1;
+  const timeString = new Date().toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
+  return {
+    id: `msg-${msgIdCounter}`,
+    sender,
+    text,
+    timestamp: timeString,
+  };
+}
+
 export default function ChatBotDemo() {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
@@ -49,15 +61,7 @@ export default function ChatBotDemo() {
   const handleSend = (textToSend: string) => {
     if (!textToSend.trim()) return;
 
-    const timeString = new Date().toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
-
-    const userMsg: ChatMessage = {
-      id: Math.random().toString(),
-      sender: "user",
-      text: textToSend,
-      timestamp: timeString,
-    };
-
+    const userMsg = createChatMessage("user", textToSend);
     setMessages((prev) => [...prev, userMsg]);
     setInputVal("");
     setIsTyping(true);
@@ -65,12 +69,7 @@ export default function ChatBotDemo() {
     // Simulate Bot response
     setTimeout(() => {
       const responseText = BOT_RESPONSES[textToSend] || "Thank you for reaching out. A support representative will review this request and assist you in a few moments.";
-      const botMsg: ChatMessage = {
-        id: Math.random().toString(),
-        sender: "bot",
-        text: responseText,
-        timestamp: new Date().toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true }),
-      };
+      const botMsg = createChatMessage("bot", responseText);
       setMessages((prev) => [...prev, botMsg]);
       setIsTyping(false);
     }, 1200);

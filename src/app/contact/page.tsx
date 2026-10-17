@@ -8,12 +8,35 @@ import Footer from "@/components/Footer";
 
 export default function ContactPage() {
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [form, setForm] = useState({ name: "", email: "", mobile: "", subject: "", message: "" });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (form.name && form.email && form.mobile && form.subject && form.message) {
+    if (!form.name || !form.email || !form.mobile || !form.message) return;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to submit enquiry");
+      }
+
       setSubmitted(true);
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : "An error occurred while sending your message.";
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -32,7 +55,7 @@ export default function ContactPage() {
           </Link>
         </div>
 
-        <span className="text-xs uppercase font-extrabold text-primary tracking-widest block pt-4 md:pt-0">WE'RE HERE TO HELP</span>
+        <span className="text-xs uppercase font-extrabold text-primary tracking-widest block pt-4 md:pt-0">WE&apos;RE HERE TO HELP</span>
         <h1 className="text-4xl md:text-5xl font-extrabold text-neutral-900">Contact Us</h1>
         <p className="text-sm text-neutral-500 max-w-lg mx-auto">
           Have questions about payments, settlements, onboarding, or account verification? Our team is ready to assist you.
@@ -149,11 +172,18 @@ export default function ContactPage() {
                   />
                 </div>
 
+                {error && (
+                  <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-600 text-xs font-semibold">
+                    {error}
+                  </div>
+                )}
+
                 <button
                   type="submit"
-                  className="w-full bg-primary text-white font-extrabold text-xs py-3.5 rounded-xl hover:opacity-95 active:scale-[0.98] transition-all shadow-md shadow-primary/20"
+                  disabled={loading}
+                  className="w-full bg-primary text-white font-extrabold text-xs py-3.5 rounded-xl hover:opacity-95 active:scale-[0.98] transition-all shadow-md shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
-                  Send Message
+                  {loading ? "Sending Message..." : "Send Message"}
                 </button>
               </form>
             )}

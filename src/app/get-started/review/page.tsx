@@ -6,20 +6,8 @@ import { CheckCircle2, Clock, User, FileText, ArrowRight, Loader2, ShieldCheck, 
 import OnboardingLayout from "../_components/OnboardingLayout";
 import { useOnboarding } from "@/context/OnboardingContext";
 
-export default function ReviewPage() {
-  const router = useRouter();
-  const { state } = useOnboarding();
-  const [isLoading, setIsLoading] = useState(false);
-
-  const handleContinue = () => {
-    setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      router.push("/get-started/payment-setup");
-    }, 1000);
-  };
-
-  const RightPanel = () => (
+function ReviewRightPanel() {
+  return (
     <div className="flex flex-col">
       <div className="w-16 h-16 rounded-2xl bg-white border border-neutral-200 text-primary flex items-center justify-center mb-8 shadow-sm">
         <Clock className="w-8 h-8" />
@@ -73,9 +61,23 @@ export default function ReviewPage() {
       </div>
     </div>
   );
+}
+
+export default function ReviewPage() {
+  const router = useRouter();
+  const { state } = useOnboarding();
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleContinue = () => {
+    setIsLoading(true);
+    setTimeout(() => {
+      setIsLoading(false);
+      router.push("/get-started/payment-setup");
+    }, 1000);
+  };
 
   return (
-    <OnboardingLayout currentStep={4} rightPanel={<RightPanel />}>
+    <OnboardingLayout currentStep={4} rightPanel={<ReviewRightPanel />}>
       <div className="mb-8">
         <h1 className="text-3xl font-extrabold text-neutral-900 mb-2">Verification Under Review</h1>
         <p className="text-neutral-500 text-sm">Our compliance team is reviewing your documents.</p>

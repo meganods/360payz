@@ -37,6 +37,8 @@ export const metadata: Metadata = {
 
 import ScrollToTop from "@/components/ScrollToTop";
 
+import { AuthProvider } from "@/context/AuthContext";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -51,12 +53,14 @@ export default function RootLayout({
         <div className="noise-overlay" />
         <GlowCursor />
 
-        <OnboardingProvider>
-          <GlobalLayoutWrapper>
-            {children}
-            <WhatsAppWidget />
-          </GlobalLayoutWrapper>
-        </OnboardingProvider>
+        <AuthProvider>
+          <OnboardingProvider>
+            <GlobalLayoutWrapper>
+              {children}
+              <WhatsAppWidget />
+            </GlobalLayoutWrapper>
+          </OnboardingProvider>
+        </AuthProvider>
       </body>
     </html>
   );

@@ -3,11 +3,13 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, ArrowUpRight } from "lucide-react";
+import { Menu, X, ArrowRight, LogOut } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Logo from "./Logo";
+import { useAuth } from "@/context/AuthContext";
 
 export default function Navbar() {
+  const { user, signOut } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
@@ -75,7 +77,45 @@ export default function Navbar() {
           ))}
         </nav>
 
-      
+        {/* Desktop Auth CTAs */}
+        <div className="hidden lg:flex items-center space-x-4">
+          {user ? (
+            <div className="flex items-center space-x-3">
+              <Link
+                href="/dashboard-preview"
+                className="flex items-center gap-2 text-xs font-bold text-neutral-800 bg-neutral-100 hover:bg-neutral-200 px-4 py-2.5 rounded-full transition-all"
+              >
+                <div className="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center text-[10px] font-extrabold uppercase">
+                  {user.displayName ? user.displayName.charAt(0) : user.email?.charAt(0) || "U"}
+                </div>
+                <span>Dashboard</span>
+              </Link>
+              <button
+                onClick={() => signOut()}
+                className="text-neutral-500 hover:text-red-600 p-2 rounded-full hover:bg-red-50 transition-colors"
+                title="Sign Out"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center space-x-3">
+              <Link
+                href="/login"
+                className="text-xs font-bold text-neutral-700 hover:text-primary px-4 py-2.5 transition-colors"
+              >
+                Sign In
+              </Link>
+              <Link
+                href="/get-started/account"
+                className="flex items-center gap-1.5 text-xs font-bold text-white bg-primary hover:bg-primary/95 px-5 py-2.5 rounded-full shadow-md shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
+              >
+                <span>Get Started</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+          )}
+        </div>
 
         {/* Mobile Menu Button */}
         <button
@@ -109,9 +149,45 @@ export default function Navbar() {
                 {link.name}
               </Link>
             ))}
-            <div className="flex flex-col space-y-4 pt-4">
-             
-            
+            <div className="flex flex-col space-y-3 pt-4 border-t border-neutral-100">
+              {user ? (
+                <>
+                  <Link
+                    href="/dashboard-preview"
+                    onClick={() => setIsOpen(false)}
+                    className="flex items-center justify-center gap-2 text-sm font-bold text-white bg-primary py-3 rounded-xl shadow-md"
+                  >
+                    Go to Dashboard
+                  </Link>
+                  <button
+                    onClick={() => {
+                      signOut();
+                      setIsOpen(false);
+                    }}
+                    className="flex items-center justify-center gap-2 text-sm font-semibold text-red-600 bg-red-50 py-2.5 rounded-xl"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    Sign Out
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link
+                    href="/login"
+                    onClick={() => setIsOpen(false)}
+                    className="text-center text-sm font-bold text-neutral-800 py-2.5 rounded-xl border border-neutral-200"
+                  >
+                    Sign In
+                  </Link>
+                  <Link
+                    href="/get-started/account"
+                    onClick={() => setIsOpen(false)}
+                    className="text-center text-sm font-bold text-white bg-primary py-3 rounded-xl shadow-md shadow-primary/20"
+                  >
+                    Get Started
+                  </Link>
+                </>
+              )}
             </div>
           </motion.div>
         )}

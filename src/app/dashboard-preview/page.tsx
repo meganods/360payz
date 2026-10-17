@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { 
   LayoutDashboard, 
@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import GridBg from "@/components/UI/GridBg";
 import DashboardDemo from "@/components/DashboardDemo";
+import { useAuth } from "@/context/AuthContext";
 
 interface Card {
   id: string;
@@ -44,6 +45,7 @@ interface Vendor {
 }
 
 export default function DashboardPreviewPage() {
+  const { user, signOut } = useAuth();
   const [activeTab, setActiveTab] = useState("overview");
 
   // Sample Cards
@@ -76,23 +78,106 @@ export default function DashboardPreviewPage() {
     { id: 3, text: "Eligible rewards applied to your card statement.", type: "info", time: "1 day ago" }
   ]);
 
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const targetUserId = user ? user.uid : "demo-user";
+        const [vRes, cRes] = await Promise.all([
+          fetch(`/api/vendors?userId=${encodeURIComponent(targetUserId)}`),
+          fetch(`/api/cards?userId=${encodeURIComponent(targetUserId)}`),
+        ]);
+        if (vRes.ok) {
+          const vData = await vRes.json();
+          if (Array.isArray(vData.data)) {
+            if (vData.data.length > 0) {
+              setVendors(vData.data.map((item: { name: string; accountNumber: string; ifsc: string; bankName: string }) => ({
+                name: item.name,
+                account: item.accountNumber,
+                ifsc: item.ifsc,
+                bank: item.bankName,
+              })));
+            } else if (user) {
+              setVendors([]);
+            }
+          }
+        }
+        if (cRes.ok) {
+          const cData = await cRes.json();
+          if (Array.isArray(cData.data)) {
+            if (cData.data.length > 0) {
+              setCards(cData.data.map((item: { id: string; cardLabel?: string; cardHolderName?: string; lastFour: string; expiry: string; bankName: string; isActive: boolean }) => ({
+                id: item.id,
+                name: item.cardLabel || item.cardHolderName || "Linked Card",
+                number: "•••• •••• •••• " + item.lastFour,
+                expiry: item.expiry,
+                bank: item.bankName,
+                active: item.isActive,
+              })));
+            } else if (user) {
+              setCards([]);
+            }
+          }
+        }
+      } catch (e) {
+        console.warn("Using local preview state:", e);
+      }
+    }
+    loadData();
+  }, [user]);
+
   const toggleCard = (id: string) => {
     setCards(cards.map(c => c.id === id ? { ...c, active: !c.active } : c));
   };
 
-  const handleAddVendor = (e: React.FormEvent) => {
+  const handleAddVendor = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newVendor.name || !newVendor.account || !newVendor.ifsc || !newVendor.bank) return;
-    setVendors([...vendors, newVendor]);
+    
+    const targetUserId = user ? user.uid : "demo-user";
+    try {
+      await fetch("/api/vendors", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: newVendor.name,
+          accountNumber: newVendor.account,
+          ifsc: newVendor.ifsc,
+          bankName: newVendor.bank,
+          userId: targetUserId,
+        }),
+      });
+    } catch (err) {
+      console.warn("Local vendor fallback:", err);
+    }
+
+    setVendors(prev => [...prev, newVendor]);
     setNewVendor({ name: "", account: "", ifsc: "", bank: "" });
     setShowAddVendor(false);
   };
 
-  const handleAddCard = (e: React.FormEvent) => {
+  const handleAddCard = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newCard.name || !newCard.number || !newCard.expiry || !newCard.bank) return;
-    setCards([...cards, {
-      id: "c" + (cards.length + 1),
+
+    const targetUserId = user ? user.uid : "demo-user";
+    try {
+      await fetch("/api/cards", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: newCard.name,
+          number: newCard.number,
+          expiry: newCard.expiry,
+          bank: newCard.bank,
+          userId: targetUserId,
+        }),
+      });
+    } catch (err) {
+      console.warn("Local card fallback:", err);
+    }
+
+    setCards(prev => [...prev, {
+      id: "c" + (prev.length + 1),
       name: newCard.name,
       number: "•••• •••• •••• " + newCard.number.slice(-4),
       expiry: newCard.expiry,
@@ -136,16 +221,52 @@ export default function DashboardPreviewPage() {
               </button>
             ))}
           </nav>
+
+          {user?.email?.toLowerCase().includes("admin") && (
+            <div className="pt-2">
+              <Link
+                href="/admin-preview"
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold text-primary bg-primary/10 hover:bg-primary/20 transition-all border border-primary/20 shadow-sm"
+              >
+                <Sparkles className="h-4 w-4 text-primary" />
+                Admin Console
+              </Link>
+            </div>
+          )}
         </div>
 
         <div className="pt-6 border-t border-neutral-200">
-          <Link
-            href="/"
-            className="flex items-center gap-3 px-4 py-3 rounded-xl text-xs text-neutral-500 hover:text-red-600 transition-colors w-full"
-          >
-            <LogOut className="h-4 w-4" />
-            Sign Out
-          </Link>
+          {user ? (
+            <div className="space-y-3">
+              <div className="px-3.5 py-2.5 bg-neutral-50 rounded-2xl border border-neutral-200/80">
+                <p className="text-[10px] uppercase font-extrabold text-neutral-400 tracking-wider">Signed In</p>
+                <p className="text-xs font-bold text-neutral-900 truncate mt-0.5">{user.displayName || user.email}</p>
+                <p className="text-[10px] text-neutral-500 truncate">{user.email}</p>
+              </div>
+              <button
+                onClick={() => signOut()}
+                className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-xs font-semibold text-neutral-600 hover:text-red-600 hover:bg-red-50 transition-colors w-full"
+              >
+                <LogOut className="h-4 w-4" />
+                Sign Out
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <Link
+                href="/login"
+                className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-primary hover:bg-primary/95 transition-all shadow-md shadow-primary/20 w-full"
+              >
+                Sign In to Save
+              </Link>
+              <Link
+                href="/"
+                className="flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs font-medium text-neutral-500 hover:text-neutral-900 transition-colors w-full"
+              >
+                Exit to Website
+              </Link>
+            </div>
+          )}
         </div>
       </aside>
 
@@ -160,9 +281,20 @@ export default function DashboardPreviewPage() {
                 <h1 className="text-2xl font-extrabold text-neutral-900">Console Overview</h1>
                 <p className="text-xs text-neutral-500 mt-1">Track key metrics and run payments simulation</p>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] text-primary bg-primary/10 border border-primary/20 px-3 py-1 rounded-full font-bold uppercase tracking-wider flex items-center gap-1.5 animate-pulse">
-                  <span className="h-2 w-2 rounded-full bg-primary" /> Live Portal active
+              <div className="flex items-center gap-2.5 flex-wrap">
+                {user ? (
+                  <span className="text-[10px] text-emerald-800 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-full font-bold flex items-center gap-1.5">
+                    <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                    Private Account: {user.displayName || user.email}
+                  </span>
+                ) : (
+                  <span className="text-[10px] text-amber-800 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-full font-bold flex items-center gap-1.5">
+                    <span className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
+                    Demo Profile &bull; <Link href="/login" className="underline font-extrabold ml-1">Sign In</Link>
+                  </span>
+                )}
+                <span className="text-[10px] text-primary bg-primary/10 border border-primary/20 px-3 py-1.5 rounded-full font-bold uppercase tracking-wider flex items-center gap-1.5">
+                  <span className="h-2 w-2 rounded-full bg-primary" /> Firestore Synced
                 </span>
               </div>
             </div>

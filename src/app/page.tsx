@@ -168,7 +168,7 @@ export default function LandingPage() {
 
             <div className="bg-primary/10 border-l-4 border-primary p-5 sm:p-6 rounded-r-xl max-w-xl shadow-sm">
               <p className="text-[22px] sm:text-[26px] font-semibold text-neutral-900 leading-snug">
-                Your vendor doesn't <span className="text-[#D4AF37]">accept</span> Credit Cards?
+                Your vendor doesn&apos;t <span className="text-[#D4AF37]">accept</span> Credit Cards?
                 <span className="text-red-500 font-bold block mt-1">We are here to help you out!</span>
               </p>
             </div>
@@ -501,7 +501,7 @@ export default function LandingPage() {
           <div className="text-center max-w-2xl mx-auto mb-12">
             <span className="text-xs uppercase font-bold text-primary tracking-widest">Transaction Pipeline</span>
             <h2 className="text-2xl md:text-3xl font-extrabold text-neutral-950 mt-1">Settle Securely Step-by-Step</h2>
-            <p className="text-sm text-neutral-500 mt-2">See how funds travel safely from your card to your vendor's bank account.</p>
+            <p className="text-sm text-neutral-500 mt-2">See how funds travel safely from your card to your vendor&apos;s bank account.</p>
           </div>
           <FlowVisualizer />
         </div>

@@ -7,11 +7,8 @@ import { motion } from "framer-motion";
 import OnboardingLayout from "../_components/OnboardingLayout";
 import { useOnboarding } from "@/context/OnboardingContext";
 
-export default function SuccessPage() {
-  const router = useRouter();
-  const { state } = useOnboarding();
-
-  const RightPanel = () => (
+function SuccessRightPanel({ firstName }: { firstName?: string }) {
+  return (
     <div className="bg-white rounded-3xl shadow-2xl shadow-neutral-200/50 border border-neutral-100 overflow-hidden w-full max-w-lg aspect-square flex flex-col relative">
       {/* Mock Dashboard Header */}
       <div className="bg-neutral-950 px-6 py-4 flex items-center justify-between">
@@ -20,7 +17,7 @@ export default function SuccessPage() {
           <span className="text-white font-bold text-sm">360payZ</span>
         </div>
         <div className="w-8 h-8 rounded-full bg-neutral-800 flex items-center justify-center text-xs text-white font-bold">
-          {state.firstName ? state.firstName[0] : "U"}
+          {firstName ? firstName[0] : "U"}
         </div>
       </div>
       
@@ -61,9 +58,14 @@ export default function SuccessPage() {
       <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent pointer-events-none" />
     </div>
   );
+}
+
+export default function SuccessPage() {
+  const router = useRouter();
+  const { state } = useOnboarding();
 
   return (
-    <OnboardingLayout currentStep={6} rightPanel={<RightPanel />} hideBack>
+    <OnboardingLayout currentStep={6} rightPanel={<SuccessRightPanel firstName={state.firstName} />} hideBack>
       <div className="flex flex-col items-center text-center mb-8 pt-8">
         {/* Animated Checkmark */}
         <motion.div 
