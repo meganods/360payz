@@ -11,7 +11,10 @@ import {
 
 // In-memory mock store for local development when Firebase keys are not yet configured
 const inMemoryStore = {
-  contacts: [] as ContactEnquiry[],
+  contacts: [
+    { id: "cnt_1", name: "Aarav Sharma", email: "aarav@example.com", mobile: "9876543210", subject: "Enterprise Card Settlement", message: "Interested in setting up 50L/month CC settlements for logistics.", createdAt: "Today, 10:15 AM" },
+    { id: "cnt_2", name: "Pooja Mehta", email: "pooja@mehtacorp.in", mobile: "9123456780", subject: "Bulk Vendor Upload API", message: "Looking for ERP webhook integration for our vendor payouts.", createdAt: "Yesterday, 03:40 PM" },
+  ] as ContactEnquiry[],
   vendors: [
     { id: "v1", userId: "demo-user", name: "Apex Distributors", accountNumber: "50100239482910", ifsc: "HDFC0000102", bankName: "HDFC Bank", isVerified: true, status: "active" as const, createdAt: new Date().toISOString() },
     { id: "v2", userId: "demo-user", name: "Global Logistics Pvt Ltd", accountNumber: "000293849102", ifsc: "ICIC0000004", bankName: "ICICI Bank", isVerified: true, status: "active" as const, createdAt: new Date().toISOString() },
@@ -27,7 +30,11 @@ const inMemoryStore = {
     { id: "TXN1024", userId: "demo-user", vendorId: "v1", vendorName: "Apex Distributors", cardId: "c1", amount: 45000, feeAmount: 450, totalBilled: 45450, rewardEarned: 900, status: "settled" as const, utrNumber: "UTR9832749102", date: "Today, 10:14 AM", createdAt: new Date().toISOString() },
     { id: "TXN1023", userId: "demo-user", vendorId: "v2", vendorName: "Global Logistics Pvt Ltd", cardId: "c2", amount: 120000, feeAmount: 1200, totalBilled: 121200, rewardEarned: 2400, status: "settled" as const, utrNumber: "UTR8291038472", date: "Yesterday, 04:30 PM", createdAt: new Date().toISOString() },
   ] as PaymentTransaction[],
-  kyc: [] as KYCRecord[],
+  kyc: [
+    { id: "kyc_1", userId: "demo-user", panNumber: "ABCDE1234F", aadhaarNumberMasked: "•••• •••• 9210", dob: "1988-06-15", address: "Trade Tower, BKC, Mumbai", status: "in_review" as const, submittedAt: "Today, 11:30 AM" },
+    { id: "kyc_2", userId: "user_deshmukh", panNumber: "XYZWP9876Q", aadhaarNumberMasked: "•••• •••• 1045", dob: "1992-09-21", address: "MIDC Industrial Estate, Pune", status: "in_review" as const, submittedAt: "Yesterday, 04:15 PM" },
+    { id: "kyc_3", userId: "user_malhotra", panNumber: "LMNOP5566R", aadhaarNumberMasked: "•••• •••• 3840", dob: "1985-03-10", address: "Sector 62, Electronic City, Noida", status: "verified" as const, submittedAt: "15 Oct 2026" },
+  ] as (KYCRecord & { businessName?: string; name?: string })[],
   users: [] as UserProfile[],
 };
 
@@ -190,4 +197,106 @@ export async function submitKYCRecord(data: Omit<KYCRecord, "id" | "submittedAt"
   }
 
   return record;
+}
+
+export async function getKYCRecords(): Promise<KYCRecord[]> {
+  const firestore = getAdminFirestore();
+  if (firestore) {
+    const snapshot = await firestore.collection("kyc_records").get();
+    if (!snapshot.empty) {
+      return snapshot.docs.map((doc: QueryDocumentSnapshot) => ({
+        id: doc.id,
+        ...doc.data(),
+      } as KYCRecord));
+    }
+  }
+  return inMemoryStore.kyc;
+}
+
+export async function updateKYCStatus(id: string, status: string): Promise<boolean> {
+  const firestore = getAdminFirestore();
+  if (firestore) {
+    await firestore.collection("kyc_records").doc(id).set(
+      {
+        status,
+        reviewedAt: new Date().toISOString(),
+      },
+      { merge: true }
+    );
+  }
+  const item = inMemoryStore.kyc.find((k) => k.id === id);
+  if (item) {
+    item.status = (status.toLowerCase() === "approved" ? "verified" : status.toLowerCase()) as KYCRecord["status"];
+  }
+  return true;
+}
+
+export async function getContactEnquiries(): Promise<ContactEnquiry[]> {
+  const firestore = getAdminFirestore();
+  if (firestore) {
+    const snapshot = await firestore.collection("contact_enquiries").get();
+    if (!snapshot.empty) {
+      return snapshot.docs.map((doc: QueryDocumentSnapshot) => ({
+        id: doc.id,
+        ...doc.data(),
+      } as ContactEnquiry));
+    }
+  }
+  return inMemoryStore.contacts;
+}
+
+export async function getAllTransactions(): Promise<PaymentTransaction[]> {
+  const firestore = getAdminFirestore();
+  if (firestore) {
+    const snapshot = await firestore.collection("transactions").get();
+    if (!snapshot.empty) {
+      return snapshot.docs.map((doc: QueryDocumentSnapshot) => ({
+        id: doc.id,
+        ...doc.data(),
+      } as PaymentTransaction));
+    }
+  }
+  return inMemoryStore.transactions;
+}
+
+export async function getTransactionByIdOrUtr(query: string): Promise<PaymentTransaction | null> {
+  if (!query) return null;
+  const clean = query.trim();
+  const firestore = getAdminFirestore();
+
+  if (firestore) {
+    // 1. Direct doc lookup
+    const docSnap = await firestore.collection("transactions").doc(clean).get();
+    if (docSnap.exists) {
+      return { id: docSnap.id, ...docSnap.data() } as PaymentTransaction;
+    }
+
+    // 2. Query by UTR
+    const utrSnap = await firestore.collection("transactions").where("utrNumber", "==", clean).get();
+    if (!utrSnap.empty) {
+      const firstDoc = utrSnap.docs[0];
+      return { id: firstDoc.id, ...firstDoc.data() } as PaymentTransaction;
+    }
+
+    // 3. Query all and find case-insensitive match
+    const all = await firestore.collection("transactions").get();
+    const found = all.docs
+      .map((d: QueryDocumentSnapshot) => ({ id: d.id, ...d.data() } as PaymentTransaction))
+      .find(
+        (t) =>
+          t.id.toLowerCase() === clean.toLowerCase() ||
+          (t.utrNumber && t.utrNumber.toLowerCase() === clean.toLowerCase())
+      );
+    if (found) return found;
+  }
+
+  // Memory store fallback
+  const memFound = inMemoryStore.transactions.find(
+    (t) =>
+      t.id.toLowerCase() === clean.toLowerCase() ||
+      (t.utrNumber && t.utrNumber.toLowerCase() === clean.toLowerCase())
+  );
+  if (memFound) return memFound;
+
+  return null;
 }

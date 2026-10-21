@@ -39,6 +39,7 @@ export default function Navbar() {
   const navLinks = [
     { name: "Home", href: "/" },
     { name: "Features", href: "/features" },
+    { name: "Track Payout", href: "/track" },
     { name: "How It Works", href: "/how-it-works" },
     { name: "About", href: "/about" },
   ];
@@ -77,8 +78,8 @@ export default function Navbar() {
           ))}
         </nav>
 
-        {/* Desktop Auth CTAs */}
-        <div className="hidden lg:flex items-center space-x-4">
+        {/* Desktop CTA (NO login buttons here - moved to footer per user request) */}
+        <div className="hidden lg:flex items-center space-x-3">
           {user ? (
             <div className="flex items-center space-x-3">
               <Link
@@ -91,7 +92,10 @@ export default function Navbar() {
                 <span>Dashboard</span>
               </Link>
               <button
-                onClick={() => signOut()}
+                onClick={async () => {
+                  await signOut();
+                  window.location.href = "/";
+                }}
                 className="text-neutral-500 hover:text-red-600 p-2 rounded-full hover:bg-red-50 transition-colors"
                 title="Sign Out"
               >
@@ -99,21 +103,13 @@ export default function Navbar() {
               </button>
             </div>
           ) : (
-            <div className="flex items-center space-x-3">
-              <Link
-                href="/login"
-                className="text-xs font-bold text-neutral-700 hover:text-primary px-4 py-2.5 transition-colors"
-              >
-                Sign In
-              </Link>
-              <Link
-                href="/get-started/account"
-                className="flex items-center gap-1.5 text-xs font-bold text-white bg-primary hover:bg-primary/95 px-5 py-2.5 rounded-full shadow-md shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
-              >
-                <span>Get Started</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </Link>
-            </div>
+            <Link
+              href="/get-started/account"
+              className="flex items-center gap-1.5 text-xs font-bold text-white bg-primary hover:bg-primary/95 px-5 py-2.5 rounded-full shadow-md shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
+            >
+              <span>Get Started</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
           )}
         </div>
 
@@ -135,7 +131,7 @@ export default function Navbar() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.2 }}
-            className="absolute top-full left-0 right-0 bg-white/95 backdrop-blur-lg border-b border-neutral-200 py-6 px-8 flex flex-col space-y-4 lg:hidden"
+            className="absolute top-full left-0 right-0 bg-white/95 backdrop-blur-lg border-b border-neutral-200 py-6 px-8 flex flex-col space-y-4 lg:hidden shadow-xl"
           >
             {navLinks.map((link) => (
               <Link
@@ -160,9 +156,10 @@ export default function Navbar() {
                     Go to Dashboard
                   </Link>
                   <button
-                    onClick={() => {
-                      signOut();
+                    onClick={async () => {
+                      await signOut();
                       setIsOpen(false);
+                      window.location.href = "/";
                     }}
                     className="flex items-center justify-center gap-2 text-sm font-semibold text-red-600 bg-red-50 py-2.5 rounded-xl"
                   >
@@ -171,22 +168,13 @@ export default function Navbar() {
                   </button>
                 </>
               ) : (
-                <>
-                  <Link
-                    href="/login"
-                    onClick={() => setIsOpen(false)}
-                    className="text-center text-sm font-bold text-neutral-800 py-2.5 rounded-xl border border-neutral-200"
-                  >
-                    Sign In
-                  </Link>
-                  <Link
-                    href="/get-started/account"
-                    onClick={() => setIsOpen(false)}
-                    className="text-center text-sm font-bold text-white bg-primary py-3 rounded-xl shadow-md shadow-primary/20"
-                  >
-                    Get Started
-                  </Link>
-                </>
+                <Link
+                  href="/get-started/account"
+                  onClick={() => setIsOpen(false)}
+                  className="text-center text-sm font-bold text-white bg-primary py-3 rounded-xl shadow-md shadow-primary/20"
+                >
+                  Get Started
+                </Link>
               )}
             </div>
           </motion.div>

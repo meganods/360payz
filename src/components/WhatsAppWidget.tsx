@@ -1,12 +1,16 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import { MessageCircle } from "lucide-react";
 
 export default function WhatsAppWidget() {
+  const pathname = usePathname();
+  const isExcluded = pathname?.startsWith("/admin") || pathname?.startsWith("/admin-preview") || pathname?.startsWith("/dashboard") || pathname?.startsWith("/dashboard-preview");
   const [showTooltip, setShowTooltip] = useState(false);
 
   useEffect(() => {
+    if (isExcluded) return;
     // Initial popup after 2 seconds
     const initialTimeout = setTimeout(() => {
       setShowTooltip(true);
@@ -21,7 +25,9 @@ export default function WhatsAppWidget() {
       clearTimeout(initialTimeout);
       clearInterval(interval);
     };
-  }, []);
+  }, [isExcluded]);
+
+  if (isExcluded) return null;
 
   return (
     <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end">

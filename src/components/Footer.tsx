@@ -65,8 +65,31 @@ export default function Footer() {
           <h5 className="text-[10px] font-bold text-white uppercase tracking-wider mb-4">Product</h5>
           <ul className="space-y-2 text-xs text-white/50">
             <li><Link href="/features" className="hover:text-primary transition-colors">Features</Link></li>
+            <li><Link href="/track" className="hover:text-primary transition-colors text-white/80 font-medium">Track Settlement</Link></li>
+            <li><Link href="/#calculator" className="hover:text-primary transition-colors">Float ROI Calculator</Link></li>
             <li><Link href="/how-it-works" className="hover:text-primary transition-colors">How It Works</Link></li>
             <li><Link href="/why-choose-us" className="hover:text-primary transition-colors">Why Choose Us</Link></li>
+          </ul>
+        </div>
+
+        <div>
+          <h5 className="text-[10px] font-bold text-white uppercase tracking-wider mb-4">Portals</h5>
+          <ul className="space-y-2 text-xs text-white/60">
+            <li>
+              <Link href="/login" className="hover:text-primary transition-colors font-medium text-white/80 flex items-center gap-1.5">
+                <span>User Login</span>
+              </Link>
+            </li>
+            <li>
+              <Link href="/admin/login" className="hover:text-primary transition-colors font-medium text-white/80 flex items-center gap-1.5">
+                <span>Admin Portal</span>
+              </Link>
+            </li>
+            <li>
+              <Link href="/get-started/account" className="hover:text-primary transition-colors">
+                <span>Create Account</span>
+              </Link>
+            </li>
           </ul>
         </div>
 
@@ -75,14 +98,6 @@ export default function Footer() {
           <ul className="space-y-2 text-xs text-white/50">
             <li><Link href="/about" className="hover:text-primary transition-colors">About Us</Link></li>
             <li><Link href="/contact" className="hover:text-primary transition-colors">Contact Us</Link></li>
-          </ul>
-        </div>
-
-        <div>
-          <h5 className="text-[10px] font-bold text-white uppercase tracking-wider mb-4">Resources</h5>
-          <ul className="space-y-2 text-xs text-white/50">
-            {/* <li><Link href="/blog" className="hover:text-primary transition-colors">Blog</Link></li> */}
-            <li><Link href="/contact" className="hover:text-primary transition-colors">Help Center</Link></li>
             <li><Link href="/#faq" className="hover:text-primary transition-colors">FAQ</Link></li>
           </ul>
         </div>

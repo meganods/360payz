@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getAdminFirestore } from "@/lib/firebaseAdmin";
+import { updateKYCStatus } from "@/lib/db";
 
 export async function POST(request: Request) {
   try {
@@ -10,16 +10,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Missing document id or status." }, { status: 400 });
     }
 
-    const firestore = getAdminFirestore();
-    if (firestore) {
-      await firestore.collection("kyc_records").doc(id).set(
-        {
-          status,
-          reviewedAt: new Date().toISOString(),
-        },
-        { merge: true }
-      );
-    }
+    await updateKYCStatus(id, status);
 
     return NextResponse.json({ success: true, message: `KYC marked as ${status}` });
   } catch (error) {

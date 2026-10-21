@@ -31,6 +31,7 @@ import AppCarousel from "@/components/AppCarousel";
 import Logo from "@/components/Logo";
 import { Accordion } from "@/components/UI/Accordion";
 import Footer from "@/components/Footer";
+import WorkingCapitalCalculator from "@/components/WorkingCapitalCalculator";
 
 const StoreButton = ({ type }: { type: 'apple' | 'google' }) => {
   return (
@@ -512,11 +513,10 @@ export default function LandingPage() {
         <AppCarousel />
       </section>
 
-
-
-
-
-
+      {/* SECTION 12: WORKING CAPITAL & FLOAT CALCULATOR */}
+      <section id="calculator" className="relative z-10 py-20 w-full px-6 md:px-12 lg:px-16 bg-slate-50/70 border-y border-slate-200/80">
+        <WorkingCapitalCalculator />
+      </section>
 
       {/* SECTION 16: FAQ ACCORDION */}
       <section id="faq" className="relative z-10 py-24 w-full px-6 md:px-12 lg:px-16">
