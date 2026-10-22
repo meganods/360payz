@@ -20,6 +20,8 @@ interface AuthResult {
 interface AuthContextType {
   user: User | null;
   loading: boolean;
+  isAdmin: boolean;
+  isUser: boolean;
   signIn: (email: string, pass: string) => Promise<AuthResult>;
   signUp: (email: string, pass: string, displayName?: string) => Promise<AuthResult>;
   signOut: () => Promise<void>;
@@ -55,6 +57,20 @@ function formatAuthError(errorCode?: string, defaultMessage?: string): string {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [isUser, setIsUser] = useState(false);
+
+  useEffect(() => {
+    const checkRoles = () => {
+      if (typeof window !== "undefined") {
+        const adminLoggedIn = localStorage.getItem("admin_logged_in") === "true";
+        const userLoggedIn = localStorage.getItem("user_logged_in") === "true";
+        setIsAdmin(adminLoggedIn);
+        setIsUser(userLoggedIn || Boolean(user && !adminLoggedIn));
+      }
+    };
+    checkRoles();
+  }, [user]);
 
   useEffect(() => {
     const auth = getFirebaseAuth();
@@ -111,6 +127,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async (): Promise<void> => {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("admin_auth");
+      localStorage.removeItem("admin_logged_in");
+      localStorage.removeItem("admin_email");
+      localStorage.removeItem("user_logged_in");
+      localStorage.removeItem("user_role");
+      localStorage.removeItem("user_email");
+    }
+    setIsAdmin(false);
+    setIsUser(false);
     const auth = getFirebaseAuth();
     if (auth) {
       await firebaseSignOut(auth);
@@ -138,6 +164,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       value={{
         user,
         loading,
+        isAdmin,
+        isUser,
         signIn,
         signUp,
         signOut,

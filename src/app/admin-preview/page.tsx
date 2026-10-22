@@ -158,6 +158,12 @@ export default function AdminPreviewPage() {
   useEffect(() => {
     let ignore = false;
     async function loadData() {
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("user_logged_in");
+        localStorage.setItem("admin_auth", "true");
+        localStorage.setItem("admin_logged_in", "true");
+        localStorage.setItem("admin_role", "admin");
+      }
       // 1. Check if localStorage has saved responded enquiries
       if (typeof window !== "undefined") {
         try {
@@ -351,6 +357,9 @@ export default function AdminPreviewPage() {
     }
     if (typeof window !== "undefined") {
       localStorage.removeItem("admin_auth");
+      localStorage.removeItem("admin_logged_in");
+      localStorage.removeItem("admin_role");
+      localStorage.removeItem("admin_email");
       sessionStorage.clear();
       window.location.href = "/admin/login";
     }

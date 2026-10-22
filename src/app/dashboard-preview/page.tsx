@@ -21,7 +21,8 @@ import {
   FileSpreadsheet,
   Calculator,
   ExternalLink,
-  Printer
+  Printer,
+  ShieldCheck
 } from "lucide-react";
 import GridBg from "@/components/UI/GridBg";
 import { useAuth } from "@/context/AuthContext";
@@ -112,6 +113,12 @@ export default function DashboardPreviewPage() {
   const [copiedUtr, setCopiedUtr] = useState<string | null>(null);
 
   useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("admin_auth");
+      localStorage.removeItem("admin_logged_in");
+      localStorage.setItem("user_logged_in", "true");
+      localStorage.setItem("user_role", "user");
+    }
     async function loadData() {
       try {
         const targetUserId = user ? user.uid : "demo-user";
@@ -287,7 +294,10 @@ export default function DashboardPreviewPage() {
       console.warn("Logout error:", e);
     }
     if (typeof window !== "undefined") {
+      localStorage.removeItem("user_logged_in");
       localStorage.removeItem("user_auth");
+      localStorage.removeItem("user_role");
+      localStorage.removeItem("user_email");
       sessionStorage.clear();
       window.location.href = "/login";
     }

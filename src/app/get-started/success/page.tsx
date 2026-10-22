@@ -149,13 +149,13 @@ export default function SuccessPage() {
         className="space-y-3"
       >
         <button 
-          onClick={() => router.push("/")}
+          onClick={() => router.push("/dashboard-preview")}
           className="w-full bg-primary text-white font-bold py-4 rounded-xl hover:bg-primary/90 transition-all shadow-lg shadow-primary/25 flex items-center justify-center gap-2"
         >
           <LayoutDashboard className="w-5 h-5" /> Go To Dashboard
         </button>
         <button 
-          onClick={() => router.push("/")}
+          onClick={() => router.push("/dashboard-preview")}
           className="w-full bg-neutral-100 text-neutral-800 font-bold py-4 rounded-xl hover:bg-neutral-200 transition-all flex items-center justify-center gap-2"
         >
           <Send className="w-5 h-5" /> Start First Transfer

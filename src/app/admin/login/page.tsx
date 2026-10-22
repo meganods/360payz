@@ -28,6 +28,12 @@ export default function AdminLoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
+  const fillAdminDemo = () => {
+    setEmail("admin@360payz.com");
+    setPassword("Admin#360payz2026");
+    setError(null);
+  };
+
   const handleAdminSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
@@ -38,24 +44,44 @@ export default function AdminLoginPage() {
     setLoading(true);
     setError(null);
 
+    // Save admin authentication flag immediately and clear user session
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("user_logged_in");
+      localStorage.removeItem("user_role");
+      localStorage.removeItem("user_email");
+      localStorage.setItem("admin_auth", "true");
+      localStorage.setItem("admin_logged_in", "true");
+      localStorage.setItem("admin_role", "admin");
+      localStorage.setItem("admin_email", email.trim());
+    }
+
     const res = await signIn(email, password);
     setLoading(false);
 
     if (!res.success) {
       // Demo fallback path for administrative review
-      if (email.toLowerCase().includes("admin") || password.toLowerCase().includes("admin") || email.includes("360payz")) {
+      if (
+        email.toLowerCase().includes("admin") || 
+        password.toLowerCase().includes("admin") || 
+        email.includes("360payz")
+      ) {
         setSuccess(true);
         setTimeout(() => {
-          router.push("/admin-preview");
-        }, 500);
+          window.location.href = "/admin-preview";
+        }, 400);
         return;
       }
-      setError(res.error || "Administrative authentication failed. Please verify your credentials or use the demo login.");
+      // If it failed and not an admin demo string, clear flag
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("admin_auth");
+        localStorage.removeItem("admin_logged_in");
+      }
+      setError(res.error || "Administrative authentication failed. Please verify your credentials or click 'Fill Admin Demo'.");
     } else {
       setSuccess(true);
       setTimeout(() => {
-        router.push("/admin-preview");
-      }, 500);
+        window.location.href = "/admin-preview";
+      }, 400);
     }
   };
 
@@ -77,8 +103,8 @@ export default function AdminLoginPage() {
       <div className="w-full max-w-md bg-white/90 backdrop-blur-xl border border-neutral-200/90 rounded-3xl p-8 md:p-10 shadow-2xl relative">
         {/* Portal Type Badge */}
         <div className="flex items-center justify-center mb-6">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-100 border border-slate-200 text-slate-800 text-[11px] font-bold tracking-wide uppercase">
-            <ShieldCheck className="w-3.5 h-3.5 text-slate-700" />
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-900 text-white text-[11px] font-bold tracking-wide uppercase shadow-sm">
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
             <span>360payZ Admin Portal</span>
           </div>
         </div>
@@ -94,6 +120,20 @@ export default function AdminLoginPage() {
           </p>
         </div>
 
+        {/* Demo Fast-Fill Pill */}
+        <div className="mb-6 p-3 rounded-2xl bg-slate-100/80 border border-slate-200 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 text-[11px] text-slate-700 font-semibold truncate">
+            <ShieldCheck className="w-3.5 h-3.5 text-slate-900 shrink-0" />
+            <span className="truncate">Need Admin Access?</span>
+          </div>
+          <button
+            type="button"
+            onClick={fillAdminDemo}
+            className="text-[11px] font-bold text-slate-900 hover:text-black bg-white px-3 py-1.5 rounded-xl border border-slate-300 shadow-xs hover:shadow-sm transition-all shrink-0"
+          >
+            Fill Admin Demo
+          </button>
+        </div>
 
         {/* Error Alert */}
         {error && (
@@ -106,7 +146,7 @@ export default function AdminLoginPage() {
         {/* Success Alert */}
         {success && (
           <div className="mb-6 p-4 rounded-2xl bg-emerald-50 border border-emerald-200/80 flex items-center gap-3 text-emerald-800 text-xs font-semibold animate-in fade-in duration-300">
-            <CheckCircle className="w-4 h-4 shrink-0" />
+            <CheckCircle className="w-4 h-4 shrink-0 text-emerald-600" />
             <p>Admin clearance verified. Loading control center...</p>
           </div>
         )}
@@ -176,9 +216,9 @@ export default function AdminLoginPage() {
         <div className="mt-6 pt-5 border-t border-neutral-200/80">
           <Link
             href="/login"
-            className="flex items-center justify-between p-3.5 rounded-2xl bg-neutral-100/90 text-neutral-900 hover:bg-neutral-200 transition-all group font-bold text-xs"
+            className="flex items-center justify-between p-3.5 rounded-2xl bg-neutral-100 hover:bg-neutral-200 transition-all group font-bold text-xs text-neutral-800"
           >
-            <span>User Login</span>
+            <span>Looking for Client Account? User Login</span>
             <span className="text-xs font-bold text-neutral-900 group-hover:translate-x-1 transition-transform">→</span>
           </Link>
         </div>

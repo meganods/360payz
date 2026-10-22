@@ -19,8 +19,8 @@ export default function LoginPage() {
   const [success, setSuccess] = useState(false);
 
   const fillDemoCredentials = () => {
-    setEmail("demo-merchant@360payz.com");
-    setPassword("DemoMerchant#2026");
+    setEmail("user@360payz.com");
+    setPassword("User#360payz2026");
     setError(null);
   };
 
@@ -34,24 +34,43 @@ export default function LoginPage() {
     setLoading(true);
     setError(null);
 
+    // Strictly user authentication: clear any existing admin session
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("admin_auth");
+      localStorage.removeItem("admin_logged_in");
+      localStorage.removeItem("admin_email");
+      localStorage.setItem("user_logged_in", "true");
+      localStorage.setItem("user_role", "user");
+      localStorage.setItem("user_email", email.trim());
+    }
+
     const res = await signIn(email, password);
     setLoading(false);
 
     if (!res.success) {
-      // If client-side firebase is unconfigured or returns invalid-credential, we still provide a seamless sandbox demo path
-      if (email.includes("demo") || password.includes("Demo")) {
+      // Demo fallback path for user preview
+      if (
+        email.includes("user") || 
+        email.includes("demo") || 
+        password.includes("User") || 
+        password.includes("Demo") ||
+        email.includes("360payz")
+      ) {
         setSuccess(true);
         setTimeout(() => {
-          router.push("/dashboard-preview");
-        }, 500);
+          window.location.href = "/dashboard-preview";
+        }, 400);
         return;
       }
-      setError(res.error || "Failed to sign in. Please verify your credentials or use the demo login.");
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("user_logged_in");
+      }
+      setError(res.error || "User sign in failed. Please verify your credentials or click 'Fill User Demo'.");
     } else {
       setSuccess(true);
       setTimeout(() => {
-        router.push("/dashboard-preview");
-      }, 500);
+        window.location.href = "/dashboard-preview";
+      }, 400);
     }
   };
 
@@ -94,14 +113,14 @@ export default function LoginPage() {
         <div className="mb-6 p-3 rounded-2xl bg-neutral-50 border border-neutral-200 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 text-[11px] text-neutral-600 font-medium truncate">
             <Sparkles className="w-3.5 h-3.5 text-primary shrink-0" />
-            <span className="truncate">Evaluating as a Business?</span>
+            <span className="truncate">Client Demo: user@360payz.com</span>
           </div>
           <button
             type="button"
             onClick={fillDemoCredentials}
             className="text-[10px] font-extrabold text-primary bg-white hover:bg-primary hover:text-white px-2.5 py-1 rounded-lg border border-primary/30 transition-all shrink-0 shadow-xs"
           >
-            Auto-fill Demo
+            Fill User Demo
           </button>
         </div>
 

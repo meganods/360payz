@@ -9,7 +9,7 @@ import Logo from "./Logo";
 import { useAuth } from "@/context/AuthContext";
 
 export default function Navbar() {
-  const { user, signOut } = useAuth();
+  const { user, signOut, isAdmin, isUser } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
@@ -78,30 +78,19 @@ export default function Navbar() {
           ))}
         </nav>
 
-        {/* Desktop CTA (NO login buttons here - moved to footer per user request) */}
+        {/* Desktop CTA */}
         <div className="hidden lg:flex items-center space-x-3">
-          {user ? (
-            <div className="flex items-center space-x-3">
-              <Link
-                href="/dashboard-preview"
-                className="flex items-center gap-2 text-xs font-bold text-neutral-800 bg-neutral-100 hover:bg-neutral-200 px-4 py-2.5 rounded-full transition-all"
-              >
-                <div className="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center text-[10px] font-extrabold uppercase">
-                  {user.displayName ? user.displayName.charAt(0) : user.email?.charAt(0) || "U"}
-                </div>
-                <span>Dashboard</span>
-              </Link>
-              <button
-                onClick={async () => {
-                  await signOut();
-                  window.location.href = "/";
-                }}
-                className="text-neutral-500 hover:text-red-600 p-2 rounded-full hover:bg-red-50 transition-colors"
-                title="Sign Out"
-              >
-                <LogOut className="w-4 h-4" />
-              </button>
-            </div>
+          {user || isAdmin || isUser ? (
+            <button
+              onClick={async () => {
+                await signOut();
+                window.location.href = "/";
+              }}
+              className="text-neutral-500 hover:text-red-600 p-2 rounded-full hover:bg-red-50 transition-colors"
+              title="Sign Out"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
           ) : (
             <Link
               href="/get-started/account"
@@ -146,27 +135,18 @@ export default function Navbar() {
               </Link>
             ))}
             <div className="flex flex-col space-y-3 pt-4 border-t border-neutral-100">
-              {user ? (
-                <>
-                  <Link
-                    href="/dashboard-preview"
-                    onClick={() => setIsOpen(false)}
-                    className="flex items-center justify-center gap-2 text-sm font-bold text-white bg-primary py-3 rounded-xl shadow-md"
-                  >
-                    Go to Dashboard
-                  </Link>
-                  <button
-                    onClick={async () => {
-                      await signOut();
-                      setIsOpen(false);
-                      window.location.href = "/";
-                    }}
-                    className="flex items-center justify-center gap-2 text-sm font-semibold text-red-600 bg-red-50 py-2.5 rounded-xl"
-                  >
-                    <LogOut className="w-4 h-4" />
-                    Sign Out
-                  </button>
-                </>
+              {user || isAdmin || isUser ? (
+                <button
+                  onClick={async () => {
+                    await signOut();
+                    setIsOpen(false);
+                    window.location.href = "/";
+                  }}
+                  className="flex items-center justify-center gap-2 text-sm font-semibold text-red-600 bg-red-50 py-2.5 rounded-xl"
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span>Sign Out</span>
+                </button>
               ) : (
                 <Link
                   href="/get-started/account"
