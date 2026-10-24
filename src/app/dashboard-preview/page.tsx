@@ -112,6 +112,16 @@ export default function DashboardPreviewPage() {
   // Copy helper
   const [copiedUtr, setCopiedUtr] = useState<string | null>(null);
 
+  // Dynamic 360payz-only metrics: 100% mathematically synchronized
+  const totalLimit = 5000000; // ₹50,00,000 across linked corporate cards
+  const totalDisbursed = receipts.reduce((sum, r) => sum + (Number(r.amount) || 0), 0);
+  const totalRewards = receipts.reduce((sum, r) => sum + (Number(r.rewardEarned) || 0), 0);
+  const availableLimit = Math.max(0, totalLimit - totalDisbursed);
+  const utilizedPercent = Number(((totalDisbursed / totalLimit) * 100).toFixed(1));
+  const availablePercent = Number((100 - utilizedPercent).toFixed(1));
+
+  const formatINR = (val: number) => "₹" + val.toLocaleString("en-IN");
+
   useEffect(() => {
     if (typeof window !== "undefined") {
       localStorage.removeItem("admin_auth");
@@ -388,11 +398,14 @@ export default function DashboardPreviewPage() {
           <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200">
             <div className="flex items-center justify-between mb-1">
               <span className="text-[10px] uppercase font-bold text-slate-400">Available Limit</span>
-              <span className="text-[10px] font-bold text-emerald-600">90% Free</span>
+              <span className="text-[10px] font-bold text-emerald-600">{availablePercent}% Free</span>
             </div>
-            <p className="text-sm font-black text-slate-900">₹45,00,000</p>
+            <p className="text-sm font-black text-slate-900">{formatINR(availableLimit)}</p>
             <div className="w-full bg-slate-200 rounded-full h-1.5 mt-2">
-              <div className="bg-primary h-1.5 rounded-full w-[90%]" />
+              <div 
+                className="bg-primary h-1.5 rounded-full transition-all duration-500" 
+                style={{ width: `${Math.min(100, Math.max(5, availablePercent))}%` }}
+              />
             </div>
           </div>
 
@@ -448,24 +461,24 @@ export default function DashboardPreviewPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           <div className="bg-white border border-slate-200/90 p-5 rounded-2xl shadow-xs">
             <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Total Disbursed (Month)</span>
-            <span className="text-2xl font-black text-slate-900 block mt-2">₹2,30,000</span>
+            <span className="text-2xl font-black text-slate-900 block mt-2">{formatINR(totalDisbursed)}</span>
             <span className="text-[11px] font-semibold text-emerald-600 flex items-center gap-1 mt-1">
               <TrendingUp className="w-3 h-3" />
-              +14% vs last billing cycle
+              100% direct vendor settlements
             </span>
           </div>
 
           <div className="bg-white border border-slate-200/90 p-5 rounded-2xl shadow-xs">
             <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Reward Points Earned</span>
-            <span className="text-2xl font-black text-primary block mt-2">4,600 pts</span>
+            <span className="text-2xl font-black text-primary block mt-2">{totalRewards.toLocaleString("en-IN")} pts</span>
             <span className="text-[11px] font-semibold text-slate-500 mt-1 block">
-              ≈ ₹4,600 card cash value
+              ≈ {formatINR(totalRewards)} card cash value
             </span>
           </div>
 
           <div className="bg-white border border-slate-200/90 p-5 rounded-2xl shadow-xs">
             <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Active Linked Cards</span>
-            <span className="text-2xl font-black text-slate-900 block mt-2">3 Cards</span>
+            <span className="text-2xl font-black text-slate-900 block mt-2">{cards.length} Cards</span>
             <span className="text-[11px] font-semibold text-slate-500 mt-1 block">
               Visa, Mastercard, RuPay
             </span>
@@ -491,7 +504,7 @@ export default function DashboardPreviewPage() {
                 <div className="flex items-center justify-between mb-4">
                   <div>
                     <h3 className="text-base font-extrabold text-slate-900">Credit Line Utilization</h3>
-                    <p className="text-xs text-slate-500">Aggregated lines across your 3 linked corporate cards</p>
+                    <p className="text-xs text-slate-500">Aggregated lines across your {cards.length} linked corporate cards</p>
                   </div>
                   <span className="text-xs font-bold text-slate-700 bg-slate-100 px-3 py-1 rounded-full">
                     Statement: 22 Days Left
@@ -500,14 +513,17 @@ export default function DashboardPreviewPage() {
 
                 <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200/80 mb-6">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs text-slate-600 font-semibold">Total Credit Limit: ₹50,00,000</span>
-                    <span className="text-xs text-primary font-bold">Available: ₹45,00,000</span>
+                    <span className="text-xs text-slate-600 font-semibold">Total Credit Limit: {formatINR(totalLimit)}</span>
+                    <span className="text-xs text-primary font-bold">Available: {formatINR(availableLimit)}</span>
                   </div>
                   <div className="w-full bg-slate-200 rounded-full h-3">
-                    <div className="bg-gradient-to-r from-blue-600 to-indigo-600 h-3 rounded-full w-[10%]" />
+                    <div 
+                      className="bg-gradient-to-r from-blue-600 to-indigo-600 h-3 rounded-full transition-all duration-500" 
+                      style={{ width: `${Math.min(100, Math.max(3, utilizedPercent))}%` }}
+                    />
                   </div>
                   <p className="text-[11px] text-slate-400 mt-2">
-                    10% utilized for vendor invoices. Enjoy up to 45 interest-free days.
+                    {utilizedPercent}% utilized for 360payz vendor payouts. {formatINR(availableLimit)} available with up to 45 interest-free days.
                   </p>
                 </div>
 
