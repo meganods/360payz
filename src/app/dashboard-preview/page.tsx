@@ -563,18 +563,22 @@ export default function DashboardPreviewPage() {
                     By routing raw material and logistics invoices through 360payZ, you turn operational costs into eligible card reward points.
                   </p>
 
-                  <div className="mt-6 p-4 rounded-2xl bg-white/10 backdrop-blur-md border border-white/10 space-y-2 text-xs">
-                    <div className="flex justify-between">
-                      <span className="text-slate-300">Estimated Monthly Spend:</span>
-                      <strong className="text-white">₹5,00,000</strong>
+                  <div className="mt-6 p-4 rounded-2xl bg-white/10 backdrop-blur-md border border-white/10 space-y-2.5 text-xs">
+                    <div className="flex justify-between items-center">
+                      <span className="text-slate-300">Current Monthly Disbursed:</span>
+                      <strong className="text-white font-mono">{formatINR(totalDisbursed)}</strong>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-300">Rewards Generated:</span>
-                      <strong className="text-amber-400 font-bold">10,000 pts (₹10,000)</strong>
+                    <div className="flex justify-between items-center">
+                      <span className="text-slate-300">Rewards Generated (2%):</span>
+                      <strong className="text-amber-400 font-bold font-mono">{totalRewards.toLocaleString("en-IN")} pts ({formatINR(totalRewards)})</strong>
                     </div>
-                    <div className="flex justify-between border-t border-white/10 pt-2">
-                      <span className="text-slate-300">Net Fee (1%):</span>
-                      <span className="text-slate-300">₹5,000</span>
+                    <div className="flex justify-between items-center border-t border-white/10 pt-2">
+                      <span className="text-slate-300">Platform Fee (1%):</span>
+                      <span className="text-slate-300 font-mono">{formatINR(Math.round(totalDisbursed * 0.01))}</span>
+                    </div>
+                    <div className="flex justify-between items-center bg-white/10 px-2.5 py-1.5 rounded-lg border border-emerald-500/30 text-emerald-300 font-semibold">
+                      <span>Net Cash-Value Gain:</span>
+                      <span className="font-bold font-mono text-emerald-400">+{formatINR(Math.max(0, totalRewards - Math.round(totalDisbursed * 0.01)))}</span>
                     </div>
                   </div>
                 </div>
