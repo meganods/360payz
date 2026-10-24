@@ -29,6 +29,8 @@ const inMemoryStore = {
   transactions: [
     { id: "TXN1024", userId: "demo-user", vendorId: "v1", vendorName: "Apex Distributors", cardId: "c1", amount: 45000, feeAmount: 450, totalBilled: 45450, rewardEarned: 900, status: "settled" as const, utrNumber: "UTR9832749102", date: "Today, 10:14 AM", createdAt: new Date().toISOString() },
     { id: "TXN1023", userId: "demo-user", vendorId: "v2", vendorName: "Global Logistics Pvt Ltd", cardId: "c2", amount: 120000, feeAmount: 1200, totalBilled: 121200, rewardEarned: 2400, status: "settled" as const, utrNumber: "UTR8291038472", date: "Yesterday, 04:30 PM", createdAt: new Date().toISOString() },
+    { id: "TXN1021", userId: "demo-user", vendorId: "v4", vendorName: "Metro Tech Solutions", cardId: "c2", amount: 85000, feeAmount: 850, totalBilled: 85850, rewardEarned: 1700, status: "settled" as const, utrNumber: "UTR5591029411", date: "16 Oct, 02:15 PM", createdAt: new Date().toISOString() },
+    { id: "TXN1019", userId: "demo-user", vendorId: "v3", vendorName: "Surya Enterprise", cardId: "c1", amount: 65000, feeAmount: 650, totalBilled: 65650, rewardEarned: 1300, status: "settled" as const, utrNumber: "UTR3910294819", date: "15 Oct, 05:45 PM", createdAt: new Date().toISOString() },
   ] as PaymentTransaction[],
   kyc: [
     { id: "kyc_1", userId: "demo-user", panNumber: "ABCDE1234F", aadhaarNumberMasked: "•••• •••• 9210", dob: "1988-06-15", address: "Trade Tower, BKC, Mumbai", status: "in_review" as const, submittedAt: "Today, 11:30 AM" },
@@ -155,7 +157,7 @@ export async function getTransactionsList(userId = "demo-user"): Promise<Payment
       return inMemoryStore.transactions;
     }
     const list = snapshot.docs.map((doc: QueryDocumentSnapshot) => doc.data() as PaymentTransaction);
-    return list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    return list.sort((a: PaymentTransaction, b: PaymentTransaction) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }
   return inMemoryStore.transactions.filter((t) => t.userId === userId);
 }
@@ -262,32 +264,36 @@ export async function getAllTransactions(): Promise<PaymentTransaction[]> {
 export async function getTransactionByIdOrUtr(query: string): Promise<PaymentTransaction | null> {
   if (!query) return null;
   const clean = query.trim();
-  const firestore = getAdminFirestore();
 
-  if (firestore) {
-    // 1. Direct doc lookup
-    const docSnap = await firestore.collection("transactions").doc(clean).get();
-    if (docSnap.exists) {
-      return { id: docSnap.id, ...docSnap.data() } as PaymentTransaction;
+  try {
+    const firestore = getAdminFirestore();
+    if (firestore) {
+      // 1. Direct doc lookup
+      const docSnap = await firestore.collection("transactions").doc(clean).get();
+      if (docSnap.exists) {
+        return { id: docSnap.id, ...docSnap.data() } as PaymentTransaction;
+      }
+
+      // 2. Query by UTR
+      const utrSnap = await firestore.collection("transactions").where("utrNumber", "==", clean).get();
+      if (!utrSnap.empty) {
+        const firstDoc = utrSnap.docs[0];
+        return { id: firstDoc.id, ...firstDoc.data() } as PaymentTransaction;
+      }
+
+      // 3. Query all and find case-insensitive match
+      const all = await firestore.collection("transactions").get();
+      const found = all.docs
+        .map((d: QueryDocumentSnapshot) => ({ id: d.id, ...d.data() } as PaymentTransaction))
+        .find(
+          (t: PaymentTransaction) =>
+            t.id.toLowerCase() === clean.toLowerCase() ||
+            (t.utrNumber && t.utrNumber.toLowerCase() === clean.toLowerCase())
+        );
+      if (found) return found;
     }
-
-    // 2. Query by UTR
-    const utrSnap = await firestore.collection("transactions").where("utrNumber", "==", clean).get();
-    if (!utrSnap.empty) {
-      const firstDoc = utrSnap.docs[0];
-      return { id: firstDoc.id, ...firstDoc.data() } as PaymentTransaction;
-    }
-
-    // 3. Query all and find case-insensitive match
-    const all = await firestore.collection("transactions").get();
-    const found = all.docs
-      .map((d: QueryDocumentSnapshot) => ({ id: d.id, ...d.data() } as PaymentTransaction))
-      .find(
-        (t) =>
-          t.id.toLowerCase() === clean.toLowerCase() ||
-          (t.utrNumber && t.utrNumber.toLowerCase() === clean.toLowerCase())
-      );
-    if (found) return found;
+  } catch (err) {
+    console.warn("Firestore lookup failed, falling back to memory store:", err);
   }
 
   // Memory store fallback

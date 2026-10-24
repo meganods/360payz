@@ -1,12 +1,17 @@
 import { NextResponse } from "next/server";
 import { getTransactionByIdOrUtr } from "@/lib/db";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(
   request: Request,
-  props: { params: Promise<{ txnId: string }> }
+  context: { params: Promise<{ txnId: string }> | { txnId: string } }
 ) {
   try {
-    const { txnId } = await props.params;
+    const resolvedParams = await Promise.resolve(context?.params);
+    const rawTxn = resolvedParams?.txnId || "";
+    const txnId = decodeURIComponent(rawTxn).trim();
+
     if (!txnId) {
       return NextResponse.json({ error: "Reference ID or UTR is required." }, { status: 400 });
     }
@@ -20,7 +25,7 @@ export async function GET(
           success: true,
           data: {
             id: txnId.toUpperCase(),
-            vendorName: "Apex Distributors Pvt Ltd",
+            vendorName: "Apex Distributors",
             amount: 45000,
             feeAmount: 450,
             totalBilled: 45450,
@@ -29,10 +34,10 @@ export async function GET(
             utrNumber: txnId.toUpperCase().startsWith("UTR") ? txnId.toUpperCase() : "UTR9832749102",
             date: "Today, 10:14 AM",
             createdAt: new Date().toISOString(),
-            bankName: "HDFC Bank",
+            bankName: "HDFC Bank Ltd",
             accountMasked: "•••• •••• 2910",
             ifsc: "HDFC0000102",
-            rail: "NPCI IMPS Direct Payout",
+            rail: "NPCI Instant IMPS Clearing",
             isDemo: true,
           },
         });
@@ -50,16 +55,16 @@ export async function GET(
         id: txn.id,
         vendorName: txn.vendorName,
         amount: txn.amount,
-        feeAmount: txn.feeAmount,
-        totalBilled: txn.totalBilled,
-        rewardEarned: txn.rewardEarned,
+        feeAmount: txn.feeAmount || Math.round(txn.amount * 0.01),
+        totalBilled: txn.totalBilled || Math.round(txn.amount * 1.0118),
+        rewardEarned: txn.rewardEarned || Math.round(txn.amount * 0.02),
         status: txn.status,
         utrNumber: txn.utrNumber || "UTRPending",
-        date: txn.date,
+        date: txn.date || "Recent",
         createdAt: txn.createdAt,
         bankName: "Verified Beneficiary Bank",
         accountMasked: "•••• •••• ••••",
-        rail: "NPCI IMPS Direct Payout",
+        rail: "NPCI Instant IMPS Clearing",
       },
     });
   } catch (error) {
