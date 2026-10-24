@@ -112,8 +112,11 @@ export default function DashboardPreviewPage() {
   // Copy helper
   const [copiedUtr, setCopiedUtr] = useState<string | null>(null);
 
-  // Dynamic 360payz-only metrics: 100% mathematically synchronized
-  const totalLimit = 5000000; // ₹50,00,000 across linked corporate cards
+  // Dynamic 360payz-only metrics: 100% mathematically synchronized to linked cards
+  const totalLimit = cards.reduce((sum, c) => {
+    const numeric = Number((c.limit || "").replace(/[^0-9]/g, "")) || 0;
+    return sum + numeric;
+  }, 0) || 5000000;
   const totalDisbursed = receipts.reduce((sum, r) => sum + (Number(r.amount) || 0), 0);
   const totalRewards = receipts.reduce((sum, r) => sum + (Number(r.rewardEarned) || 0), 0);
   const availableLimit = Math.max(0, totalLimit - totalDisbursed);
@@ -152,15 +155,17 @@ export default function DashboardPreviewPage() {
         if (cRes.ok) {
           const cData = await cRes.json();
           if (Array.isArray(cData.data) && cData.data.length > 0) {
-            setCards(cData.data.map((item: { id: string; cardLabel?: string; cardHolderName?: string; lastFour: string; expiry: string; bankName: string; isActive: boolean }) => ({
+            const defaultCardLimits = ["₹25,00,000", "₹15,00,000", "₹10,00,000"];
+            const defaultNetworks = ["Visa Infinite", "Mastercard World", "RuPay Select"];
+            setCards(cData.data.map((item: { id: string; cardLabel?: string; cardHolderName?: string; lastFour: string; expiry: string; bankName: string; isActive: boolean }, idx: number) => ({
               id: item.id,
               name: item.cardLabel || item.cardHolderName || "Linked Card",
               number: "•••• •••• •••• " + item.lastFour,
               expiry: item.expiry,
               bank: item.bankName,
               active: item.isActive,
-              network: "Commercial Card",
-              limit: "₹20,00,000",
+              network: defaultNetworks[idx] || "Commercial Card",
+              limit: defaultCardLimits[idx] || "₹10,00,000",
             })));
           }
         }
